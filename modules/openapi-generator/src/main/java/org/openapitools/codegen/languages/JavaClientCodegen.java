@@ -63,6 +63,9 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     public static final String MICROPROFILE_FRAMEWORK = "microprofileFramework";
     public static final String USE_ABSTRACTION_FOR_FILES = "useAbstractionForFiles";
     public static final String DYNAMIC_OPERATIONS = "dynamicOperations";
+    public static final String WITH_AWSV4_SIGNATURE = "withAWSV4Signature";
+    public static final String AWS_REGION = "awsRegion";
+    public static final String AWS_SERVICE_NAME = "awsServiceName";
 
     public static final String PLAY_24 = "play24";
     public static final String PLAY_25 = "play25";
@@ -111,6 +114,8 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     protected boolean dynamicOperations = false;
     protected String authFolder;
     protected String serializationLibrary = null;
+    protected String awsRegion = null;
+    protected String awsServiceName = null;
 
     public JavaClientCodegen() {
         super();
@@ -152,6 +157,9 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         cliOptions.add(CliOption.newString(MICROPROFILE_FRAMEWORK, "Framework for microprofile. Possible values \"kumuluzee\""));
         cliOptions.add(CliOption.newBoolean(USE_ABSTRACTION_FOR_FILES, "Use alternative types instead of java.io.File to allow passing bytes without a file on disk. Available on " + RESTTEMPLATE + " library"));
         cliOptions.add(CliOption.newBoolean(DYNAMIC_OPERATIONS, "Generate operations dynamically at runtime from an OAS", this.dynamicOperations));
+        cliOptions.add(CliOption.newBoolean(WITH_AWSV4_SIGNATURE, "Whether to include AWS v4 signature support", this.withAWSV4Signature));
+        cliOptions.add(CliOption.newBoolean(AWS_REGION, "AWS region to sign the request"));
+        cliOptions.add(CliOption.newBoolean(AWS_SERVICE_NAME, "AWS service name to sign the request"));
 
         supportedLibraries.put(JERSEY1, "HTTP client: Jersey client 1.19.x. JSON processing: Jackson 2.9.x. Enable gzip request encoding using '-DuseGzipFeature=true'. IMPORTANT NOTE: jersey 1.x is no longer actively maintained so please upgrade to 'jersey2' or other HTTP libaries instead.");
         supportedLibraries.put(JERSEY2, "HTTP client: Jersey client 2.25.1. JSON processing: Jackson 2.9.x");
@@ -313,6 +321,18 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         if (additionalProperties.containsKey(DYNAMIC_OPERATIONS)) {
             this.setDynamicOperations(Boolean.valueOf(additionalProperties.get(DYNAMIC_OPERATIONS).toString()));
         }
+        if (additionalProperties.containsKey(WITH_AWSV4_SIGNATURE)) {
+            setWithAWSV4Signature(Boolean.parseBoolean(additionalProperties.get(WITH_AWSV4_SIGNATURE).toString()));
+            if (withAWSV4Signature) {
+                additionalProperties.put(WITH_AWSV4_SIGNATURE, "true");
+            }
+        }
+        if (additionalProperties.containsKey(AWS_REGION)) {
+            this.setAwsRegion(additionalProperties.get(AWS_REGION).toString());
+        }
+        if (additionalProperties.containsKey(AWS_SERVICE_NAME)) {
+            this.setAwsServiceName(additionalProperties.get(AWS_SERVICE_NAME).toString());
+        }
         additionalProperties.put(DYNAMIC_OPERATIONS, dynamicOperations);
 
         final String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
@@ -352,6 +372,9 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             supportingFiles.add(new SupportingFile("auth/HttpBasicAuth.mustache", authFolder, "HttpBasicAuth.java"));
             supportingFiles.add(new SupportingFile("auth/HttpBearerAuth.mustache", authFolder, "HttpBearerAuth.java"));
             supportingFiles.add(new SupportingFile("auth/ApiKeyAuth.mustache", authFolder, "ApiKeyAuth.java"));
+            if (withAWSV4Signature) {
+                supportingFiles.add(new SupportingFile("auth/AwsV4Auth.mustache", authFolder, "AwsV4Auth.java"));
+            }
         }
 
         supportingFiles.add(new SupportingFile("gradlew.mustache", "", "gradlew"));
@@ -977,6 +1000,22 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         } else {
             throw new IllegalArgumentException("Unexpected serializationLibrary value: " + serializationLibrary);
         }
+    }
+
+    public String getAwsRegion() {
+        return awsRegion;
+    }
+
+    public void setAwsRegion(String awsRegion) {
+        this.awsRegion = awsRegion;
+    }
+
+    public String getAwsServiceName() {
+        return awsServiceName;
+    }
+
+    public void setAwsServiceName(String awsServiceName) {
+        this.awsServiceName = awsServiceName;
     }
 
     public void forceSerializationLibrary(String serializationLibrary) {

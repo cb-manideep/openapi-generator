@@ -1,0 +1,225 @@
+{{>licenseInfo}}
+
+package {{invokerPackage}}.auth;
+
+import {{invokerPackage}}.Pair;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
+
+{{>generatedAnnotation}}
+public class AwsV4Auth implements Authentication {
+
+    private static final String SIGN_ALGO = "HmacSHA256";
+    private static final String ISO8601_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
+    private static final String DATE_FORMAT = "yyyyMMdd";
+
+    private String service;
+    private String region;
+    private String accessKey;
+    private String secretKey;
+    private String sessionToken;
+
+    public AwsV4Auth(String service, String region) {
+        String accessKey = System.getenv("AWS_ACCESS_KEY_ID");
+        String secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
+        String sessionToken = System.getenv("AWS_SESSION_TOKEN");
+        this.service = service;
+        this.region = region;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+        this.sessionToken = sessionToken;
+    }
+
+    public AwsV4Auth(String service, String region, String accessKey, String secretKey, String sessionToken) {
+        this.service = service;
+        this.region = region;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+        this.sessionToken = sessionToken;
+    }
+
+    public String getService() {
+        return service;
+    }
+
+    public void setService(String service) {
+        this.service = service;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    @Override
+    public void applyToParams(List<Pair> queryParams, Map<String, String> headerParams, Map<String, String> cookieParams, String payload, String method, String url) {
+        Date currTime = new Date();
+        SimpleDateFormat iso8601Fmt = new SimpleDateFormat(ISO8601_FORMAT);
+        iso8601Fmt.setTimeZone(new SimpleTimeZone(0, "UTC"));
+        String iso8601 = iso8601Fmt.format(currTime);
+        URI uri = URI.create(url);
+        headerParams.put("Host", uri.getHost());
+        headerParams.put("X-Amz-Date", iso8601);
+        String signature = sign(uri, method, currTime, queryParams, headerParams, payload);
+        headerParams.put("Authorization", signature);
+        if (sessionToken != null) {
+            headerParams.put("X-Amz-Security-Token", sessionToken);
+        }
+    }
+
+
+    private String sign(URI uri, String method, Date currTime, List<Pair> params, Map<String, String> headers, String body) {
+
+        SimpleDateFormat iso8601Fmt = new SimpleDateFormat(ISO8601_FORMAT);
+        iso8601Fmt.setTimeZone(new SimpleTimeZone(0, "UTC"));
+        SimpleDateFormat dateFmt = new SimpleDateFormat(DATE_FORMAT);
+        dateFmt.setTimeZone(new SimpleTimeZone(0, "UTC"));
+
+        String iso8601 = iso8601Fmt.format(currTime);
+        String date = dateFmt.format(currTime);
+
+        headers = new HashMap<>(headers == null ? Collections.emptyMap() : headers);
+
+        //Task-1
+        String canUri = canonicalURI(uri);
+        String canQueryStr = canonicalQueryString(params);
+        String canHeaders = canonicalHeaders(headers);
+        String signHeaders = signedHeaders(headers);
+        String bodyPayload = hexPayload(hash(body));
+        String canonicalRequest = canonicalRequest(method, canUri, canQueryStr, canHeaders, signHeaders, bodyPayload);
+
+        //Task-2
+        String credentialScope = date + "/" + region + "/" + service + "/aws4_request";
+        String stringToSign = "AWS4-HMAC-SHA256" + "\n"
+                + iso8601 + "\n"
+                + credentialScope + "\n"
+                + hexPayload(hash(canonicalRequest));
+
+        //Task-3
+        byte[] kSecret = ("AWS4" + secretKey).getBytes();
+        byte[] kDate = sign(date, kSecret);
+        byte[] kRegion = sign(region, kDate);
+        byte[] kService = sign(service, kRegion);
+        byte[] kSigning = sign("aws4_request", kService);
+        String signature = hexPayload(sign(stringToSign, kSigning));
+
+        //Task-4
+        return String.format("AWS4-HMAC-SHA256 Credential=%s, SignedHeaders=%s, Signature=%s", accessKey + "/" + credentialScope, signHeaders, signature);
+    }
+
+    private static String canonicalURI(URI uri) {
+        String path = uri.getPath();
+        if (path == null || path.isEmpty()) {
+            return "/";
+        }
+        String encodedPath = encode(path).replaceAll("%2F", "/");
+        return encodedPath.startsWith("/") ? encodedPath : ("/" + encodedPath);
+    }
+
+    private static String canonicalQueryString(List<Pair> pairParam) {
+        Map<String, String> params = new HashMap<>();
+        for (Pair pair : pairParam) {
+            params.put(pair.getName(), pair.getValue());
+        }
+        return new TreeMap<>(params).entrySet().stream().map((e) -> encode(e.getKey()) + "=" + encode(e.getValue()))
+                .collect(Collectors.joining("&"));
+    }
+
+    private static String canonicalHeaders(Map<String, String> headers) {
+        return headers.entrySet().stream().sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getKey(), o2.getKey()))
+                .map((e) -> e.getKey().trim().toLowerCase().replaceAll("\\s+", " ") + ":" + e.getValue().trim().replaceAll("\\s+", " ") + "\n")
+                .collect(Collectors.joining());
+    }
+
+    private static String signedHeaders(Map<String, String> headers) {
+        return headers.keySet().stream().sorted(String.CASE_INSENSITIVE_ORDER).map(String::toLowerCase)
+                .collect(Collectors.joining(";"));
+    }
+
+    private static String hexPayload(byte[] hashData) {
+        StringBuilder hexData = new StringBuilder();
+        for (byte data : hashData) {
+            hexData.append(String.format("%02x", data));
+        }
+        return hexData.toString().toLowerCase();
+    }
+
+    private static String canonicalRequest(
+            String method,
+            String canUri,
+            String canQueryStr,
+            String canHeaders,
+            String signHeaders,
+            String bodyHash
+    ) {
+        return method + "\n"
+                + canUri + "\n"
+                + canQueryStr + "\n"
+                + canHeaders + "\n"
+                + signHeaders + "\n"
+                + bodyHash;
+    }
+
+    private static byte[] hash(String payload) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(payload.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static byte[] sign(String payload, byte[] key) {
+        try {
+            byte[] data = payload.getBytes(StandardCharsets.UTF_8);
+            Mac mac = Mac.getInstance(AwsV4Auth.SIGN_ALGO);
+            mac.init(new SecretKeySpec(key, AwsV4Auth.SIGN_ALGO));
+            return mac.doFinal(data);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static String encode(String data) {
+        try {
+            return URLEncoder.encode(data, "UTF-8");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+}

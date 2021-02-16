@@ -107,6 +107,7 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
     protected boolean parentOverridden = false;
     protected List<String> additionalModelTypeAnnotations = new LinkedList<>();
     protected boolean openApiNullable = true;
+    protected boolean withAWSV4Signature = false;
 
     public AbstractJavaCodegen() {
         super();
@@ -1772,6 +1773,10 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
 
     public void setAdditionalModelTypeAnnotations(final List<String> additionalModelTypeAnnotations) {
         this.additionalModelTypeAnnotations = additionalModelTypeAnnotations;
+    }
+
+    public void setWithAWSV4Signature(boolean withAWSV4Signature) {
+        this.withAWSV4Signature = withAWSV4Signature;
     }
 
     @Override
