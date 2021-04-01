@@ -64,6 +64,8 @@ import {{invokerPackage}}.auth.Authentication;
 import {{invokerPackage}}.auth.HttpBasicAuth;
 import {{invokerPackage}}.auth.HttpBearerAuth;
 import {{invokerPackage}}.auth.ApiKeyAuth;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 {{#withAWSV4Signature}}
 import {{invokerPackage}}.auth.AwsV4Auth;
 {{/withAWSV4Signature}}
@@ -112,7 +114,7 @@ public class ApiClient {
         authentications.put("{{name}}", new HttpBasicAuth());{{/isBasicBasic}}{{^isBasicBasic}}
         authentications.put("{{name}}", new HttpBearerAuth("{{scheme}}"));{{/isBasicBasic}}{{/isBasic}}{{#isApiKey}}
         {{#withAWSV4Signature}}
-        authentications.put("{{name}}", new AwsV4Auth("{{awsServiceName}}", "{{awsRegion}}"));
+        authentications.put("AWS_IAM", new AwsV4Auth("execute-api", DefaultCredentialsProvider.create()));
         {{/withAWSV4Signature}}
         {{^withAWSV4Signature}}
         authentications.put("{{name}}", new ApiKeyAuth({{#isKeyInHeader}}"header"{{/isKeyInHeader}}{{#isKeyInQuery}}"query"{{/isKeyInQuery}}{{#isKeyInCookie}}"cookie"{{/isKeyInCookie}}, "{{keyParamName}}"));
@@ -135,7 +137,7 @@ public class ApiClient {
         authentications.put("{{name}}", new HttpBasicAuth());{{/isBasicBasic}}{{^isBasicBasic}}
         authentications.put("{{name}}", new HttpBearerAuth("{{scheme}}"));{{/isBasicBasic}}{{/isBasic}}{{#isApiKey}}
         {{#withAWSV4Signature}}
-        authentications.put("{{name}}", new AwsV4Auth("{{awsServiceName}}", "{{awsRegion}}"));
+        authentications.put("AWS_IAM", new AwsV4Auth("execute-api", DefaultCredentialsProvider.create()));
         {{/withAWSV4Signature}}
         {{^withAWSV4Signature}}
         authentications.put("{{name}}", new ApiKeyAuth({{#isKeyInHeader}}"header"{{/isKeyInHeader}}{{#isKeyInQuery}}"query"{{/isKeyInQuery}}{{#isKeyInCookie}}"cookie"{{/isKeyInCookie}}, "{{keyParamName}}"));
@@ -201,7 +203,7 @@ public class ApiClient {
         authentications.put("{{name}}", new HttpBasicAuth());{{/isBasicBasic}}{{^isBasicBasic}}
         authentications.put("{{name}}", new HttpBearerAuth("{{scheme}}"));{{/isBasicBasic}}{{/isBasic}}{{#isApiKey}}
         {{#withAWSV4Signature}}
-                authentications.put("{{name}}", new AwsV4Auth("{{awsServiceName}}", "{{awsRegion}}"));
+                authentications.put("{{name}}", new AwsV4Auth("{{awsServiceName}}"));
         {{/withAWSV4Signature}}
         {{^withAWSV4Signature}}
         authentications.put("{{name}}", new ApiKeyAuth({{#isKeyInHeader}}"header"{{/isKeyInHeader}}{{#isKeyInQuery}}"query"{{/isKeyInQuery}}{{#isKeyInCookie}}"cookie"{{/isKeyInCookie}}, "{{keyParamName}}"));
@@ -511,14 +513,14 @@ public class ApiClient {
     }
 
     /**
-    * Helper method to set Access key value for the API key authentication.
+    * Helper method to set AWS Region for the API key authentication.
     *
-    * @param accessKey AWS access key
+    * @param region AWS region
     */
-    public void setAccessKey(String accessKey) {
+    public void setAwsRegion(String region) {
         for (Authentication auth : authentications.values()) {
             if (auth instanceof AwsV4Auth) {
-                ((AwsV4Auth) auth).setAccessKey(accessKey);
+                ((AwsV4Auth) auth).setRegion(region);
                 return;
             }
         }
@@ -526,29 +528,14 @@ public class ApiClient {
     }
 
     /**
-    * Helper method to set secret access key for the API key authentication.
+    * Helper method to set AWS Credentials provider for the API key authentication.
     *
-    * @param secretKey AWS secret key
+    * @param credentialsProvider AWS Credentials provider
     */
-    public void setSecretKey(String secretKey) {
+    public void setCredentialsProvider(AwsCredentialsProvider credentialsProvider) {
         for (Authentication auth : authentications.values()) {
             if (auth instanceof AwsV4Auth) {
-                ((AwsV4Auth) auth).setSecretKey(secretKey);
-                return;
-            }
-        }
-        throw new RuntimeException("No API key authentication configured!");
-    }
-
-    /**
-    * Helper method to set session token for the API key authentication.
-    *
-    * @param sessionToken AWS Session token
-    */
-    public void setSessionToken(String sessionToken) {
-        for (Authentication auth : authentications.values()) {
-            if (auth instanceof AwsV4Auth) {
-                ((AwsV4Auth) auth).setSessionToken(sessionToken);
+                ((AwsV4Auth) auth).setCredentialsProvider(credentialsProvider);
                 return;
             }
         }

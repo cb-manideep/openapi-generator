@@ -13,28 +13,33 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+
 {{>generatedAnnotation}}
 public class AwsV4Auth implements Authentication {
 
     private static final String SIGN_ALGO = "HmacSHA256";
     private static final String ISO8601_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
     private static final String DATE_FORMAT = "yyyyMMdd";
+    private static final String DEFAULT_REGION = "us-east-1";
 
     private String service;
     private String region;
     private String accessKey;
     private String secretKey;
     private String sessionToken;
+    private AwsCredentialsProvider credentialsProvider;
 
-    public AwsV4Auth(String service, String region) {
-        String accessKey = System.getenv("AWS_ACCESS_KEY_ID");
-        String secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
-        String sessionToken = System.getenv("AWS_SESSION_TOKEN");
+    public AwsV4Auth(String service, AwsCredentialsProvider credentialsProvider) {
+        AwsCredentials awsCredentials = credentialsProvider.resolveCredentials();
+        this.accessKey = awsCredentials.accessKeyId();
+        this.secretKey = awsCredentials.secretAccessKey();
+        this.sessionToken = AwsSessionCredentials.class.isInstance(awsCredentials) ? ((AwsSessionCredentials) awsCredentials).sessionToken() : null;
+        this.credentialsProvider = credentialsProvider;
         this.service = service;
-        this.region = region;
-        this.accessKey = accessKey;
-        this.secretKey = secretKey;
-        this.sessionToken = sessionToken;
+        this.region = DEFAULT_REGION;
     }
 
     public AwsV4Auth(String service, String region, String accessKey, String secretKey, String sessionToken) {
@@ -61,28 +66,12 @@ public class AwsV4Auth implements Authentication {
         this.region = region;
     }
 
-    public String getAccessKey() {
-        return accessKey;
+    public void setCredentialsProvider(AwsCredentialsProvider credentialsProvider) {
+        this.credentialsProvider = credentialsProvider;
     }
 
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
-    public String getSessionToken() {
-        return sessionToken;
-    }
-
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
+    public AwsCredentialsProvider getCredentialsProvider() {
+        return this.credentialsProvider;
     }
 
     @Override
