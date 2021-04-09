@@ -2365,22 +2365,26 @@ public class DefaultCodegenTest {
         sc = openAPI.getComponents().getSchemas().get(modelName);
         cm = codegen.fromModel(modelName, sc);
         assertEquals(cm.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(cm.getAdditionalPropertiesIsAnyType(), true);
 
         modelName = "AdditionalPropertiesTrue";
         sc = openAPI.getComponents().getSchemas().get(modelName);
         cm = codegen.fromModel(modelName, sc);
         assertEquals(cm.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(cm.getAdditionalPropertiesIsAnyType(), true);
 
         modelName = "AdditionalPropertiesFalse";
         sc = openAPI.getComponents().getSchemas().get(modelName);
         cm = codegen.fromModel(modelName, sc);
         assertEquals(cm.getAdditionalProperties(), null);
+        assertEquals(cm.getAdditionalPropertiesIsAnyType(), false);
 
         modelName = "AdditionalPropertiesSchema";
         sc = openAPI.getComponents().getSchemas().get(modelName);
         cm = codegen.fromModel(modelName, sc);
         CodegenProperty stringCp = codegen.fromProperty("", new Schema().type("string"));
         assertEquals(cm.getAdditionalProperties(), stringCp);
+        assertEquals(cm.getAdditionalPropertiesIsAnyType(), false);
     }
 
     @Test
@@ -2411,24 +2415,32 @@ public class DefaultCodegenTest {
         cm = codegen.fromModel(modelName, sc);
         mapWithAddPropsUnset = cm.getVars().get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = cm.getVars().get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = cm.getVars().get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = cm.getVars().get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         modelName = "ObjectModelWithAddPropsInProps";
         sc = openAPI.getComponents().getSchemas().get(modelName);
         cm = codegen.fromModel(modelName, sc);
         mapWithAddPropsUnset = cm.getVars().get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = cm.getVars().get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = cm.getVars().get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = cm.getVars().get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         if (isGenerateAliasAsModel) { // restore the setting
             GlobalSettings.setProperty("generateAliasAsModel", "true");
@@ -2464,24 +2476,32 @@ public class DefaultCodegenTest {
         co = codegen.fromOperation(path, "POST", operation, null);
         mapWithAddPropsUnset = co.queryParams.get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = co.queryParams.get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = co.queryParams.get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = co.queryParams.get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         path = "/additional_properties/";
         operation = openAPI.getPaths().get(path).getPost();
         co = codegen.fromOperation(path, "POST", operation, null);
         mapWithAddPropsUnset = co.queryParams.get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = co.queryParams.get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = co.queryParams.get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = co.queryParams.get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         if (isGenerateAliasAsModel) { // restore the setting
             GlobalSettings.setProperty("generateAliasAsModel", "true");
@@ -2517,24 +2537,32 @@ public class DefaultCodegenTest {
         co = codegen.fromOperation(path, "POST", operation, null);
         mapWithAddPropsUnset = co.responses.get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = co.responses.get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = co.responses.get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = co.responses.get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         path = "/additional_properties/";
         operation = openAPI.getPaths().get(path).getPost();
         co = codegen.fromOperation(path, "POST", operation, null);
         mapWithAddPropsUnset = co.responses.get(0);
         assertEquals(mapWithAddPropsUnset.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsUnset.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsTrue = co.responses.get(1);
         assertEquals(mapWithAddPropsTrue.getAdditionalProperties(), anyTypeSchema);
+        assertEquals(mapWithAddPropsTrue.getAdditionalPropertiesIsAnyType(), true);
         mapWithAddPropsFalse = co.responses.get(2);
         assertEquals(mapWithAddPropsFalse.getAdditionalProperties(), null);
+        assertEquals(mapWithAddPropsFalse.getAdditionalPropertiesIsAnyType(), false);
         mapWithAddPropsSchema = co.responses.get(3);
         assertEquals(mapWithAddPropsSchema.getAdditionalProperties(), stringCp);
+        assertEquals(mapWithAddPropsSchema.getAdditionalPropertiesIsAnyType(), false);
 
         if (isGenerateAliasAsModel) { // restore the setting
             GlobalSettings.setProperty("generateAliasAsModel", "true");
@@ -2726,7 +2754,7 @@ public class DefaultCodegenTest {
         codegen.setOpenAPI(openAPI);
 
         String modelName = "ObjectWithPropertiesThatHaveValidations";
-        Schema sc = openAPI.getComponents().getSchemas().get(modelName);;
+        Schema sc = openAPI.getComponents().getSchemas().get(modelName);
         CodegenModel cm = codegen.fromModel(modelName, sc);
 
         List<CodegenProperty> props = cm.getVars();
@@ -2926,5 +2954,324 @@ public class DefaultCodegenTest {
         CodegenProperty cp = cm.getVars().get(0);
         assertEquals(cp.isModel, true);
         assertEquals(cp.complexType, "objectData");
+    }
+
+    @Test
+    public void testHasVarsInModel() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_7613.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        Schema sc;
+        CodegenModel cm;
+        List<String> modelNames;
+
+        modelNames = Arrays.asList(
+                "ArrayWithValidationsInItems",
+                "ObjectWithValidationsInAdditionalProperties",
+                "AdditionalPropertiesUnset",
+                "AdditionalPropertiesTrue",
+                "AdditionalPropertiesFalse",
+                "AdditionalPropertiesSchema"
+        );
+        for (String modelName : modelNames) {
+            sc = openAPI.getComponents().getSchemas().get(modelName);
+            cm = codegen.fromModel(modelName, sc);
+            assertEquals(cm.getHasVars(), false);
+        }
+
+        modelNames = Arrays.asList(
+                "ObjectModelWithRefAddPropsInProps",
+                "ObjectModelWithAddPropsInProps",
+                "ObjectWithOptionalAndRequiredProps",
+                "ObjectPropContainsProps"
+        );
+        for (String modelName : modelNames) {
+            sc = openAPI.getComponents().getSchemas().get(modelName);
+            cm = codegen.fromModel(modelName, sc);
+            assertEquals(cm.getHasVars(), true);
+        }
+    }
+
+    @Test
+    public void testHasVarsInProperty() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_7613.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        Schema sc;
+        CodegenModel cm;
+        List<String> modelNames;
+
+        modelNames = Arrays.asList(
+                "ObjectWithValidationsInArrayPropItems",
+                "ObjectModelWithRefAddPropsInProps",
+                "ObjectModelWithAddPropsInProps",
+                "ObjectWithOptionalAndRequiredProps"
+        );
+        for (String modelName : modelNames) {
+            sc = openAPI.getComponents().getSchemas().get(modelName);
+            cm = codegen.fromModel(modelName, sc);
+            assertEquals(cm.vars.get(0).getHasVars(), false);
+        }
+
+        String modelName;
+        modelName = "ArrayWithObjectWithPropsInItems";
+        sc = openAPI.getComponents().getSchemas().get(modelName);
+        cm = codegen.fromModel(modelName, sc);
+        assertEquals(cm.getItems().getHasVars(), true);
+
+        modelName = "ObjectWithObjectWithPropsInAdditionalProperties";
+        sc = openAPI.getComponents().getSchemas().get(modelName);
+        cm = codegen.fromModel(modelName, sc);
+        assertEquals(cm.getAdditionalProperties().getHasVars(), true);
+    }
+
+    @Test
+    public void testHasVarsInParameter() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_7613.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        String path;
+        Operation operation;
+        CodegenOperation co;
+
+        path = "/array_with_validations_in_items/{items}";
+        operation = openAPI.getPaths().get(path).getPost();
+        co = codegen.fromOperation(path, "POST", operation, null);
+        assertEquals(co.pathParams.get(0).getHasVars(), false);
+        assertEquals(co.bodyParam.getHasVars(), false);
+
+        path = "/object_with_optional_and_required_props/{objectData}";
+        operation = openAPI.getPaths().get(path).getPost();
+        co = codegen.fromOperation(path, "POST", operation, null);
+        assertEquals(co.pathParams.get(0).getHasVars(), true);
+        assertEquals(co.bodyParam.getHasVars(), true);
+    }
+
+    @Test
+    public void testHasVarsInResponse() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_7613.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        String path;
+        Operation operation;
+        CodegenOperation co;
+
+        path = "/additional_properties/";
+        operation = openAPI.getPaths().get(path).getPost();
+        co = codegen.fromOperation(path, "POST", operation, null);
+        assertEquals(co.responses.get(0).getHasVars(), false);
+
+        path = "/object_with_optional_and_required_props/{objectData}";
+        operation = openAPI.getPaths().get(path).getPost();
+        co = codegen.fromOperation(path, "POST", operation, null);
+        // does not have vars because the inline schema was extracted into a component ref
+        assertEquals(co.responses.get(0).getHasVars(), false);
+    }
+
+    @Test
+    public void testHasRequiredInModel() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_8906.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        Schema sc;
+        CodegenModel cm;
+
+        List<String> modelNamesWithoutRequired = Arrays.asList(
+                "EmptyObject",
+                "ObjectWithOptionalB",
+                "AnyTypeNoPropertiesNoRequired",
+                "AnyTypeHasPropertiesNoRequired",
+                "AnyTypeNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectNoPropertiesNoRequired",
+                "ObjectHasPropertiesNoRequired",
+                "ObjectNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedNoAllofPropsNoPropertiesNoRequired",
+                "ComposedNoAllofPropsHasPropertiesNoRequired",
+                "ComposedNoAllofPropsNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofOptPropNoPropertiesNoRequired",
+                "ComposedHasAllofOptPropHasPropertiesNoRequired",
+                "ComposedHasAllofOptPropNoPropertiesHasRequired"  // TODO: hasRequired should be true, fix this
+        );
+        for (String modelName : modelNamesWithoutRequired) {
+            sc = openAPI.getComponents().getSchemas().get(modelName);
+            cm = codegen.fromModel(modelName, sc);
+            assertEquals(cm.getHasRequired(), false);
+        }
+
+        List<String> modelNamesWithRequired = Arrays.asList(
+                "AnyTypeHasPropertiesHasRequired",
+                "ObjectHasPropertiesHasRequired",
+                "ComposedNoAllofPropsHasPropertiesHasRequired",
+                "ComposedHasAllofOptPropHasPropertiesHasRequired",
+                "ComposedHasAllofReqPropNoPropertiesNoRequired",  // TODO: hasRequired should be false, fix this
+                "ComposedHasAllofReqPropHasPropertiesNoRequired",  // TODO: hasRequired should be false, fix this
+                "ComposedHasAllofReqPropNoPropertiesHasRequired",
+                "ComposedHasAllofReqPropHasPropertiesHasRequired"
+        );
+        for (String modelName : modelNamesWithRequired) {
+            sc = openAPI.getComponents().getSchemas().get(modelName);
+            cm = codegen.fromModel(modelName, sc);
+            assertEquals(cm.getHasRequired(), true);
+        }
+    }
+
+    @Test
+    public void testHasRequiredInProperties() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_8906.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        String modelName = "CodegenPropertiesModel";
+        Schema sc = openAPI.getComponents().getSchemas().get(modelName);
+        CodegenModel cm = codegen.fromModel(modelName, sc);
+
+        HashSet<String> modelNamesWithoutRequired = new HashSet(Arrays.asList(
+                "EmptyObject",
+                "ObjectWithOptionalB",
+                "AnyTypeNoPropertiesNoRequired",
+                "AnyTypeHasPropertiesNoRequired",
+                "AnyTypeNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "AnyTypeHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectNoPropertiesNoRequired",
+                "ObjectHasPropertiesNoRequired", // Note: this is extracted into another component and is a ref
+                "ObjectNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedNoAllofPropsNoPropertiesNoRequired",
+                "ComposedNoAllofPropsHasPropertiesNoRequired",
+                "ComposedNoAllofPropsNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofOptPropNoPropertiesNoRequired",
+                "ComposedHasAllofOptPropHasPropertiesNoRequired",
+                "ComposedHasAllofOptPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedNoAllofPropsHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedHasAllofOptPropHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropNoPropertiesNoRequired",
+                "ComposedHasAllofReqPropHasPropertiesNoRequired",
+                "ComposedHasAllofReqPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropHasPropertiesHasRequired"  // TODO: hasRequired should be true, fix this
+        ));
+        HashSet<String> modelNamesWithRequired = new HashSet(Arrays.asList(
+        ));
+        for (CodegenProperty var : cm.getVars()) {
+            boolean hasRequired = var.getHasRequired();
+            if (modelNamesWithoutRequired.contains(var.name)) {
+                assertEquals(hasRequired, false);
+            } else if (modelNamesWithRequired.contains(var.name)) {
+                assertEquals(hasRequired, true);
+            } else {
+                // All variables must be in the above sets
+                 assertEquals(true, false);
+            }
+        }
+    }
+
+    @Test
+    public void testHasRequiredInParameters() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_8906.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        String path = "/schemasInQueryParamsAndResponses";
+        Operation operation = openAPI.getPaths().get(path).getPost();
+        CodegenOperation co = codegen.fromOperation(path, "POST", operation, null);
+
+        HashSet<String> modelNamesWithoutRequired = new HashSet(Arrays.asList(
+                "EmptyObject",
+                "ObjectWithOptionalB",
+                "AnyTypeNoPropertiesNoRequired",
+                "AnyTypeHasPropertiesNoRequired",
+                "AnyTypeNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "AnyTypeHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectNoPropertiesNoRequired",
+                "ObjectHasPropertiesNoRequired", // Note: this is extracted into another component and is a ref
+                "ObjectNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedNoAllofPropsNoPropertiesNoRequired",
+                "ComposedNoAllofPropsHasPropertiesNoRequired",
+                "ComposedNoAllofPropsNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofOptPropNoPropertiesNoRequired",
+                "ComposedHasAllofOptPropHasPropertiesNoRequired",
+                "ComposedHasAllofOptPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedNoAllofPropsHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedHasAllofOptPropHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropNoPropertiesNoRequired",
+                "ComposedHasAllofReqPropHasPropertiesNoRequired",
+                "ComposedHasAllofReqPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropHasPropertiesHasRequired"  // TODO: hasRequired should be true, fix this
+        ));
+        HashSet<String> modelNamesWithRequired = new HashSet(Arrays.asList(
+        ));
+        for (CodegenParameter param : co.pathParams) {
+            boolean hasRequired = param.getHasRequired();
+            if (modelNamesWithoutRequired.contains(param.baseName)) {
+                assertEquals(hasRequired, false);
+            } else if (modelNamesWithRequired.contains(param.baseName)) {
+                assertEquals(hasRequired, true);
+            } else {
+                // All variables must be in the above sets
+                assertEquals(true, false);
+            }
+        }
+    }
+
+    @Test
+    public void testHasRequiredInResponses() {
+        final OpenAPI openAPI = TestUtils.parseFlattenSpec("src/test/resources/3_0/issue_8906.yaml");
+        final DefaultCodegen codegen = new DefaultCodegen();
+        codegen.setOpenAPI(openAPI);
+        codegen.setDisallowAdditionalPropertiesIfNotPresent(false);
+
+        String path = "/schemasInQueryParamsAndResponses";
+        Operation operation = openAPI.getPaths().get(path).getPost();
+        CodegenOperation co = codegen.fromOperation(path, "POST", operation, null);
+
+        HashSet<String> modelNamesWithoutRequired = new HashSet(Arrays.asList(
+                "EmptyObject",
+                "ObjectWithOptionalB",
+                "AnyTypeNoPropertiesNoRequired",
+                "AnyTypeHasPropertiesNoRequired",
+                "AnyTypeNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "AnyTypeHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectNoPropertiesNoRequired",
+                "ObjectHasPropertiesNoRequired", // Note: this is extracted into another component and is a ref
+                "ObjectNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedNoAllofPropsNoPropertiesNoRequired",
+                "ComposedNoAllofPropsHasPropertiesNoRequired",
+                "ComposedNoAllofPropsNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofOptPropNoPropertiesNoRequired",
+                "ComposedHasAllofOptPropHasPropertiesNoRequired",
+                "ComposedHasAllofOptPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ObjectHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedNoAllofPropsHasPropertiesHasRequired", // False because this is extracted into another component and is a ref
+                "ComposedHasAllofOptPropHasPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropNoPropertiesNoRequired",
+                "ComposedHasAllofReqPropHasPropertiesNoRequired",
+                "ComposedHasAllofReqPropNoPropertiesHasRequired",  // TODO: hasRequired should be true, fix this
+                "ComposedHasAllofReqPropHasPropertiesHasRequired"  // TODO: hasRequired should be true, fix this
+        ));
+        HashSet<String> modelNamesWithRequired = new HashSet(Arrays.asList(
+        ));
+        for (CodegenResponse cr : co.responses) {
+            boolean hasRequired = cr.getHasRequired();
+            if (modelNamesWithoutRequired.contains(cr.message)) {
+                assertEquals(hasRequired, false);
+            } else if (modelNamesWithRequired.contains(cr.message)) {
+                assertEquals(hasRequired, true);
+            } else {
+                // All variables must be in the above sets
+                assertEquals(true, false);
+            }
+        }
     }
 }

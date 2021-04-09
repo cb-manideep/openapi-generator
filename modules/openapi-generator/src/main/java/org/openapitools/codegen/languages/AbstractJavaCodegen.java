@@ -23,10 +23,13 @@ import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.ComposedSchema;
+import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.parser.util.SchemaTypeUtil;
 import org.apache.commons.io.FilenameUtils;
@@ -49,7 +52,7 @@ import static org.openapitools.codegen.utils.StringUtils.*;
 
 public abstract class AbstractJavaCodegen extends DefaultCodegen implements CodegenConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJavaCodegen.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(AbstractJavaCodegen.class);
     private static final String ARTIFACT_VERSION_DEFAULT_VALUE = "1.0.0";
 
     public static final String FULL_JAVA_UTIL = "fullJavaUtil";
@@ -63,6 +66,7 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
     public static final String BOOLEAN_GETTER_PREFIX = "booleanGetterPrefix";
     public static final String IGNORE_ANYOF_IN_ENUM = "ignoreAnyOfInEnum";
     public static final String ADDITIONAL_MODEL_TYPE_ANNOTATIONS = "additionalModelTypeAnnotations";
+    public static final String ADDITIONAL_ENUM_TYPE_ANNOTATIONS = "additionalEnumTypeAnnotations";
     public static final String DISCRIMINATOR_CASE_SENSITIVE = "discriminatorCaseSensitive";
     public static final String OPENAPI_NULLABLE = "openApiNullable";
 
@@ -106,6 +110,7 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
     protected String parentVersion = "";
     protected boolean parentOverridden = false;
     protected List<String> additionalModelTypeAnnotations = new LinkedList<>();
+    protected List<String> additionalEnumTypeAnnotations = new LinkedList<>();
     protected boolean openApiNullable = true;
     protected boolean withAWSV4Signature = false;
 
@@ -245,6 +250,7 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
         cliOptions.add(CliOption.newString(BOOLEAN_GETTER_PREFIX, "Set booleanGetterPrefix").defaultValue(this.getBooleanGetterPrefix()));
         cliOptions.add(CliOption.newBoolean(IGNORE_ANYOF_IN_ENUM, "Ignore anyOf keyword in enum", ignoreAnyOfInEnum));
         cliOptions.add(CliOption.newString(ADDITIONAL_MODEL_TYPE_ANNOTATIONS, "Additional annotations for model type(class level annotations)"));
+        cliOptions.add(CliOption.newString(ADDITIONAL_ENUM_TYPE_ANNOTATIONS, "Additional annotations for enum type(class level annotations)"));
         cliOptions.add(CliOption.newBoolean(OPENAPI_NULLABLE, "Enable OpenAPI Jackson Nullable library", this.openApiNullable));
 
         cliOptions.add(CliOption.newString(CodegenConstants.PARENT_GROUP_ID, CodegenConstants.PARENT_GROUP_ID_DESC));
@@ -292,6 +298,12 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
             String additionalAnnotationsList = additionalProperties.get(ADDITIONAL_MODEL_TYPE_ANNOTATIONS).toString();
 
             this.setAdditionalModelTypeAnnotations(Arrays.asList(additionalAnnotationsList.split(";")));
+        }
+
+        if (additionalProperties.containsKey(ADDITIONAL_ENUM_TYPE_ANNOTATIONS)) {
+            String additionalAnnotationsList = additionalProperties.get(ADDITIONAL_ENUM_TYPE_ANNOTATIONS).toString();
+
+            this.setAdditionalEnumTypeAnnotations(Arrays.asList(additionalAnnotationsList.split(";")));
         }
 
         if (additionalProperties.containsKey(CodegenConstants.INVOKER_PACKAGE)) {
@@ -541,13 +553,6 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
             }
         }
 
-        if (additionalProperties.containsKey(WITH_XML)) {
-            setWithXml(Boolean.parseBoolean(additionalProperties.get(WITH_XML).toString()));
-            if (withXml) {
-                additionalProperties.put(WITH_XML, "true");
-            }
-        }
-
         if (additionalProperties.containsKey(DATE_LIBRARY)) {
             setDateLibrary(additionalProperties.get("dateLibrary").toString());
         }
@@ -591,6 +596,13 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
             for (String modelName : objs.keySet()) {
                 Map<String, Object> models = (Map<String, Object>) objs.get(modelName);
                 models.put(ADDITIONAL_MODEL_TYPE_ANNOTATIONS, additionalModelTypeAnnotations);
+            }
+        }
+
+        if (!additionalEnumTypeAnnotations.isEmpty()) {
+            for (String modelName : objs.keySet()) {
+                Map<String, Object> models = (Map<String, Object>) objs.get(modelName);
+                models.put(ADDITIONAL_ENUM_TYPE_ANNOTATIONS, additionalEnumTypeAnnotations);
             }
         }
 
@@ -935,6 +947,16 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
         return super.toDefaultValue(schema);
     }
 
+    @Override
+    public String toDefaultParameterValue(final Schema<?> schema) {
+        Object defaultValue = schema.getDefault();
+        if (defaultValue == null) {
+            return null;
+        }
+        // escape quotes
+        return defaultValue.toString().replace("\"", "\\\"");
+    }
+
     /**
      * Return the example value of the parameter. Overrides the
      * setParameterExampleValue(CodegenParameter, Parameter) method in
@@ -961,6 +983,49 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
         Schema schema = parameter.getSchema();
         if (schema != null && schema.getExample() != null) {
             codegenParameter.example = schema.getExample().toString();
+        }
+
+        setParameterExampleValue(codegenParameter);
+    }
+
+    /**
+     * Return the example value of the parameter. Overrides the parent method in DefaultCodegen
+     * to not set examples on complex models, as they don't compile properly.
+     *
+     * @param codegenParameter Codegen parameter
+     * @param requestBody      Request body
+     */
+    @Override
+    public void setParameterExampleValue(CodegenParameter codegenParameter, RequestBody requestBody) {
+        Boolean isModel = (codegenParameter.isModel || (codegenParameter.isContainer && codegenParameter.getItems().isModel));
+
+        Content content = requestBody.getContent();
+
+        if (content.size() > 1) {
+            // @see ModelUtils.getSchemaFromContent()
+            LOGGER.warn("Multiple MediaTypes found, using only the first one");
+        }
+
+        MediaType mediaType = content.values().iterator().next();
+        if (mediaType.getExample() != null) {
+            if (isModel) {
+                LOGGER.warn("Ignoring complex example on request body");
+            } else {
+                codegenParameter.example = mediaType.getExample().toString();
+                return;
+            }
+        }
+
+        if (mediaType.getExamples() != null && !mediaType.getExamples().isEmpty()) {
+            Example example = mediaType.getExamples().values().iterator().next();
+            if (example.getValue() != null) {
+                if (isModel) {
+                    LOGGER.warn("Ignoring complex example on request body");
+                } else {
+                    codegenParameter.example = example.getValue().toString();
+                    return;
+                }
+            }
         }
 
         setParameterExampleValue(codegenParameter);
@@ -1777,6 +1842,10 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
 
     public void setWithAWSV4Signature(boolean withAWSV4Signature) {
         this.withAWSV4Signature = withAWSV4Signature;
+    }
+    
+    public void setAdditionalEnumTypeAnnotations(final List<String> additionalEnumTypeAnnotations) {
+        this.additionalEnumTypeAnnotations = additionalEnumTypeAnnotations;
     }
 
     @Override
