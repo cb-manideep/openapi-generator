@@ -83,6 +83,12 @@ public class AwsV4Auth implements Authentication {
         URI uri = URI.create(url);
         headerParams.put("Host", uri.getHost());
         headerParams.put("X-Amz-Date", iso8601);
+        String contentType = headerParams.get("Content-Type");
+        if (contentType == null) {
+            contentType = "application/json";
+        }
+        contentType = contentType + "; charset=utf-8";
+        headerParams.put("Content-Type", contentType);
         String signature = sign(uri, method, currTime, queryParams, headerParams, payload);
         headerParams.put("Authorization", signature);
         if (sessionToken != null) {
