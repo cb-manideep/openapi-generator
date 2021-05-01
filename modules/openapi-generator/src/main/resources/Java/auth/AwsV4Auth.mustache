@@ -27,27 +27,12 @@ public class AwsV4Auth implements Authentication {
 
     private String service;
     private String region;
-    private String accessKey;
-    private String secretKey;
-    private String sessionToken;
     private AwsCredentialsProvider credentialsProvider;
 
     public AwsV4Auth(String service, AwsCredentialsProvider credentialsProvider) {
-        AwsCredentials awsCredentials = credentialsProvider.resolveCredentials();
-        this.accessKey = awsCredentials.accessKeyId();
-        this.secretKey = awsCredentials.secretAccessKey();
-        this.sessionToken = AwsSessionCredentials.class.isInstance(awsCredentials) ? ((AwsSessionCredentials) awsCredentials).sessionToken() : null;
         this.credentialsProvider = credentialsProvider;
         this.service = service;
         this.region = DEFAULT_REGION;
-    }
-
-    public AwsV4Auth(String service, String region, String accessKey, String secretKey, String sessionToken) {
-        this.service = service;
-        this.region = region;
-        this.accessKey = accessKey;
-        this.secretKey = secretKey;
-        this.sessionToken = sessionToken;
     }
 
     public String getService() {
@@ -76,6 +61,11 @@ public class AwsV4Auth implements Authentication {
 
     @Override
     public void applyToParams(List<Pair> queryParams, Map<String, String> headerParams, Map<String, String> cookieParams, String payload, String method, String url) {
+        AwsCredentials awsCredentials = this.credentialsProvider.resolveCredentials();
+        String accessKey = awsCredentials.accessKeyId();
+        String secretKey = awsCredentials.secretAccessKey();
+        String sessionToken = AwsSessionCredentials.class.isInstance(awsCredentials) ? ((AwsSessionCredentials) awsCredentials).sessionToken() : null;
+
         Date currTime = new Date();
         SimpleDateFormat iso8601Fmt = new SimpleDateFormat(ISO8601_FORMAT);
         iso8601Fmt.setTimeZone(new SimpleTimeZone(0, "UTC"));
@@ -89,7 +79,7 @@ public class AwsV4Auth implements Authentication {
         }
         contentType = contentType + "; charset=utf-8";
         headerParams.put("Content-Type", contentType);
-        String signature = sign(uri, method, currTime, queryParams, headerParams, payload);
+        String signature = sign(uri, method, currTime, queryParams, headerParams, payload, accessKey, secretKey);
         headerParams.put("Authorization", signature);
         if (sessionToken != null) {
             headerParams.put("X-Amz-Security-Token", sessionToken);
@@ -97,7 +87,7 @@ public class AwsV4Auth implements Authentication {
     }
 
 
-    private String sign(URI uri, String method, Date currTime, List<Pair> params, Map<String, String> headers, String body) {
+    private String sign(URI uri, String method, Date currTime, List<Pair> params, Map<String, String> headers, String body, String accessKey, String secretKey) {
 
         SimpleDateFormat iso8601Fmt = new SimpleDateFormat(ISO8601_FORMAT);
         iso8601Fmt.setTimeZone(new SimpleTimeZone(0, "UTC"));
